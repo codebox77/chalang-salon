@@ -1,0 +1,7 @@
+data
+src/data
+*.md
+.git
+docker-compose.hub.yml
+.github
+.gitignore

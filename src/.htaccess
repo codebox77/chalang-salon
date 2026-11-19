@@ -1,0 +1,4 @@
+Options -Indexes
+<FilesMatch "^(lib\.php|.*\.db|.*\.db-(wal|shm))$">
+  Require all denied
+</FilesMatch>

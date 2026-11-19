@@ -1,0 +1,19 @@
+# 찰랑찰랑 미용실 예약 – NAS(시놀로지 Container Manager / UGREEN Docker) 용
+services:
+  salon:
+    build: .
+    image: chalang-salon:1.0
+    container_name: chalang-salon
+    restart: unless-stopped
+    ports:
+      - "8080:80"                 # 왼쪽 8080 을 다른 번호로 바꿔도 됨
+    environment:
+      TZ: Asia/Seoul
+      # 첫 관리자 계정을 만들 때 입력해야 하는 설치 코드 (아무나 먼저 관리자가 되는 것 방지)
+      SETUP_CODE: "change-me-1234"
+      # NAS 사용자 번호 (SSH 에서 `id` 명령으로 확인). 비워 두면 자동으로 권한을 맞춤
+      # PUID: "1026"
+      # PGID: "100"
+    volumes:
+      # DB(SQLite)·로고가 저장되는 폴더 – NAS 백업 대상에 포함하세요
+      - ./data:/var/www/data

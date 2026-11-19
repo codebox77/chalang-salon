@@ -1,0 +1,52 @@
+# Docker Hub(codeboxdocker/chalang-salon)에 이미지 자동 빌드·배포
+# - main 브랜치에 push → :latest
+# - v1.2.3 태그 push   → :1.2.3, :1.2, :latest
+# 필요한 저장소 Secret: DOCKERHUB_TOKEN (Docker Hub → Account settings → Personal access tokens, Read & Write)
+name: docker
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+    paths-ignore: ['**.md']
+  workflow_dispatch:
+
+env:
+  IMAGE: codeboxdocker/chalang-salon
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          username: codeboxdocker
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') }}
+            type=sha,format=short
+
+      # 시놀로지·UGREEN 기종에 맞게 인텔(amd64) + ARM(arm64) 동시 빌드
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
